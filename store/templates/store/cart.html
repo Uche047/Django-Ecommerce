@@ -1,0 +1,45 @@
+{% extends 'store/main.html' %}
+{% load static %}
+{% block content %}
+<div class="row">
+	<div class="col-lg-12">
+		<div class="box-element">
+			<a class="btn btn-outline-dark" href="{% url 'store' %}"style='display: block-inline;'>&#x2190;Continue Shopping</a>
+			<hr>
+			
+			<h5 style="display: inline-block;">Items: {{order.totalItem}}</h5>
+			<h5 style="display: inline-block; margin-left:25%">Total: ₦{{order.grandCost|floatformat:2}}</h5>
+			<a href="{% url 'checkout' %}" class="btn btn-success" style="float:right;">Checkout</a>
+		</div>
+		<br>
+
+		<div class="box-element">	
+			<div class='cart-row'>
+				<div style="flex:2;"></div>
+				<div style="flex:2;"><strong>Item</strong></div>
+				<div style="flex:1;"><strong>Price</strong></div>
+				<div style="flex:1;"><strong>Quantity</strong></div>
+				<div style="flex:1;"><strong>Total</strong></div>
+
+			</div>
+			<hr>
+			{% for item in orderitems %}
+			<div class='cart-row'>
+				<div style="flex:2;"><img class="row-image" src="{{item.product.imageURL}}"></div>
+				<div style="flex:2;">{{item.product.name}}</div>
+				<div style="flex:1;">₦{{item.product.price|floatformat:2}}</div>
+				<div style="flex:1;">
+					<p class="quantity">{{item.quantity}}</p>
+					<div class="quantity">
+						<img data-product="{{item.product.id}}" data-action="add" class="change-quantity update-cart" src="{% static 'images/arrow-up.png' %}">
+						<img data-product="{{item.product.id}}" data-action="remove" class="change-quantity update-cart" src="{% static 'images/arrow-down.png' %}">
+					</div>
+				</div>
+				<div style="flex:1;">₦{{item.total|floatformat:2}}</div>
+			</div>	
+			<hr>
+			{% endfor %}		
+		</div>
+	</div>	
+</div>
+{% endblock %}

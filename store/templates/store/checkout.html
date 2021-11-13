@@ -1,0 +1,133 @@
+{% extends 'store/main.html' %}
+{% load static %}
+{% block content %}
+
+<div class="row">
+	<div class="col-lg-6">
+		<div class="box-element" id="form-wrapper">
+			<form class="form-inline form">
+				<div class="form-group" id="required-info">
+					<input type="text" name="name" placeholder="Name.." required class="form-control" style="display:inline; width:49%; margin-right:1%;">
+					<input type="email" name="email" placeholder="Email.." required class="form-control" style="display:inline;width:49%;">
+				</div>
+				
+				<div id="shipping-info">
+					<hr>
+					<h6>Shipping Information:</h6>
+					<hr>
+					<div class="form-group" >
+						<input type="text" name="address" placeholder="Adress.." class="form-control" style="display:inline; width:49%; margin-right:1%;">
+						<input type="text" name="city" placeholder="City.." class="form-control" style="display:inline;width:49%;">
+					</div>
+
+					<div class="form-group " >
+						<input type="text" name="state" placeholder="State.." class="form-control" style="display:inline; width:49%; margin-right:1%;">
+						<input type="text" name="zipcode" placeholder="Zip Code.." class="form-control" style="display:inline;width:49%;margin-top: 2%;">
+					</div>
+
+					
+				</div>
+				<hr>
+				<input id="form-button" value="Submit" type="submit" class="btn btn-success" style="width:98%;">
+				<br>
+
+			</form>
+			
+		</div>
+		<br>
+		<div class="box-element hidden" id="payment-info">
+			<small style="margin-right:2%">PayPal Options</small>
+			<button class="btn btn-primary" id="make-payment">Make Payment</button>
+
+		</div>	
+	</div>
+
+	<div class="col-lg-6">
+		<div class="box-element">
+			<a class="btn btn-outline-dark" href="{% url 'cart' %}"style='display: block-inline;'>&#x2190;Back to Cart</a>
+			<hr>
+			<h4>Order Summary</h4>
+			<hr>
+			{% for item in orderitems %}
+			<div class="cart-row">
+				<div style="flex:2;"><img class="row-image" src="{{item.product.imageURL}}"></div>
+				<div style="flex:2;">{{item.product.name}}</div>
+				<div style="flex:1;">₦{{item.product.price|floatformat:2}}</div>
+				<div style="flex:1;">x{{item.quantity}}</div>
+			</div>
+			<hr>
+			{% endfor %}
+			<h5>Items: {{order.totalItem}}</h5>
+			<h5>Total:₦{{order.grandCost|floatformat:2}}</h5>	
+		</div>		
+	</div>	
+</div>
+<script type="text/javascript">
+	// Hides the shipping-info div if shipping is False by setting it's content
+	// to an empty string 
+	var shipping = '{{order.shipping}}'
+	var total = '{{order.grandCost}}'
+	console.log(shipping)
+	if(shipping == 'False'){
+		// Hide shipping info
+		document.getElementById('shipping-info').innerHTML = ""
+	}	
+	if (user != 'AnonymousUser'){
+		// Hide name and email fields since we have such info in the backend
+		document.getElementById("required-info").innerHTML = ''
+	}
+	if (user != 'AnonymousUser' && shipping == 'False'){
+		// Hide all parts of the form but show payment button
+		document.getElementById("form-wrapper").classList.add('hidden')
+		document.getElementById("payment-info").classList.remove("hidden")
+	}
+	var form = document.getElementsByClassName('form')
+	// Adding functionality 
+	// When submit button is clicked hide this button and show previously hidden payment option
+	form[0].addEventListener('submit', function(transform) {
+		// Prevent the default behaviour of opening another page
+		transform.preventDefault()
+		console.log("Form has been submitted")
+		document.getElementById("form-button").classList.add("hidden")
+		document.getElementById("payment-info").classList.remove("hidden")
+	})
+	document.getElementById("make-payment").addEventListener('click', function(){
+		submitFormData()
+	})
+	// submits input from the checkout page using the fetch api
+	function submitFormData(){
+		console.log('Payment button clicked')
+		// Creating objects to be sent via the fetch api to the backend
+		var userFormData = {'name': null,'email': null,'total': total}
+		var shippingInfo = {'address':null,'city':null,'state':null, 'zipcode':null}
+		if (shipping != 'False'){
+			// Accessing input from form of class 'form' form[0] because 
+			// getElementsbyClassName which returns a list
+			shippingInfo.address = form[0].address.value
+			shippingInfo.city = form[0].city.value
+			shippingInfo.state = form[0].state.value
+			shippingInfo.zipcode = form[0].zipcode.value
+		}
+		if (user == 'AnonymousUser') {
+			userFormData.name = form[0].name.value
+			userFormData.email = form[0].email.value
+		}
+		var url = '/order/'
+		fetch(url,{
+			method:'POST',
+			headers:{'Content-Type':'application/json', 'X-CSRFToken':csrftoken},
+			body:JSON.stringify({'form':userFormData,'shipping':shippingInfo})
+		})
+		.then((response) => response.json())
+		.then((data)=> {
+			console.log(data)
+			alert('Transaction Completed')
+			cart = {}
+			document.cookie = 'cart=' + JSON.stringify(cart) + ";domain=;path=/"
+			// Once the data has been sent redirect the page to this url 
+			window.location.href = "{% url 'store'%}"
+		})
+	}
+	
+</script>
+{% endblock content %}
